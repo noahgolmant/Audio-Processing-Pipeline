@@ -1,13 +1,16 @@
-/*
- * audio_objects.c
- *
- *  Created on: Jun 16, 2015
- *      Author: Noah
- */
+//
+// Created by noah on 7/25/15.
+//
+
+#ifndef MUSIC_PROCESSING_AUDIO_DECODING_H
+#define MUSIC_PROCESSING_AUDIO_DECODING_H
 
 #include <stdlib.h>
 #include <vlc/vlc.h>
 
+/**
+ * AUDIO DATA STRUCTS
+ */
 typedef struct vlc_context {
     libvlc_instance_t *mVlcInstance;
     libvlc_media_player_t *mMp;
@@ -69,10 +72,11 @@ struct audio_data {
     int bpm;
     frequency_band_distribution freq_dists;
 
-
 };
 
+/**
+ * AUDIO DECODING FUNCTIONS
+ */
+extern vlc_context *init_vlc_context(char *, int);
 
-
-
-
+#endif //MUSIC_PROCESSING_AUDIO_DECODING_H
