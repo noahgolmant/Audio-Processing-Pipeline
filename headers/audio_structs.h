@@ -1,12 +1,5 @@
-//
-// Created by noah on 7/25/15.
-//
-
-#ifndef MUSIC_PROCESSING_AUDIO_DECODING_H
-#define MUSIC_PROCESSING_AUDIO_DECODING_H
-
-#include <stdlib.h>
-#include <vlc/vlc.h>
+#ifndef MUSIC_PROCESSING_AUDIO_STRUCTS_H
+#define MUSIC_PROCESSING_AUDIO_STRUCTS_H
 
 /**
  * AUDIO DATA STRUCTS
@@ -74,9 +67,4 @@ struct audio_data {
 
 };
 
-/**
- * AUDIO DECODING FUNCTIONS
- */
-extern vlc_context *init_vlc_context(char *, int);
-
-#endif //MUSIC_PROCESSING_AUDIO_DECODING_H
+#endif

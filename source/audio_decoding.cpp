@@ -7,6 +7,19 @@
 #include <string.h>
 #include "audio_decoding.h"
 
+/* FAST FOURIER TRANSFORM PROCESSING CONSTANTS */
+// 44.1khz sample frequency -- also the number of samples in a second.
+// coincidentally (not), we want a segment of 1 second for the short fast fourier transform
+// to allow realtime sample processing
+static int sampling_frequency = 44100;
+static int num_frequency_bands = 1024; // how many frequency bands we have, i.e. the resolution of the sample
+static double frequency_range = (double) sampling_frequency / num_frequency_bands;
+static int window_ms_duration = 5; // size of window function in milliseconds
+// number of samples in the windows' millisecond duration
+static int window_sample_size = window_ms_duration * sampling_frequency / 1000;
+// holds the 1 second sample data
+static uint8_t *sample_data_segment;
+
 /* FUNCTION PROTOTYPES */
 static void prepareRender(void *p_audio_data, uint8_t **pp_pcm_buffer,
                           unsigned int size);
@@ -91,10 +104,12 @@ vlc_context *init_vlc_context(char *uri, int chunkSize) {
         printf("%s\n", meta_map[i].meta_str ? meta_map[i].meta_str : strdup("nil"));
     }
 
+    // allocate space for the buffer that holds a second's worth of audio data for the FFT
+    sample_data_segment = (uint8_t *) malloc(sizeof(uint8_t) * sampling_frequency);
+    printf("SIZE: %d\n", sizeof(sample_data_segment));
     // start the media player, which will callback our handle/prepare functions
     libvlc_media_player_set_media(ctx->mMp, ctx->mMedia);
     libvlc_media_player_play(ctx->mMp);
-
     return ctx;
 }
 
@@ -110,11 +125,16 @@ static void prepareRender(void *p_audio_data, uint8_t **pp_pcm_buffer,
             free(sp->mAudioData);
         sp->mAudioData = (char *) malloc(sizeof(char) * size); // Deleted in the destructor
     }
+
     // Ensure that the PCM (pulse code modulation) buffer points to the mAudioData
     // buffer we just initialized as a component of our vlc_context
     *pp_pcm_buffer = (uint8_t *) (sp->mAudioData);
 }
 
+// where to start placing the current pcm_buffer data
+// increment it by the length of pcm_buffer each time
+// until we've filled up nearly to 44100 samples
+int segment_index_offset = 0;
 // Handles the data once prepared for rendering
 static void handleStream(void *p_audio_data, uint8_t *p_pcm_buffer,
                          unsigned int channels, unsigned int rate, unsigned int nb_samples,
@@ -125,14 +145,21 @@ static void handleStream(void *p_audio_data, uint8_t *p_pcm_buffer,
     // Update the frequency if needed
     if (rate != sp->mFrequency)
         sp->mFrequency = rate;
+
+
     sp->mChannels = channels;
-
-    printf("PCM BUFFER: \n");
-    int i;
-    for (i = 0; i < sizeof(p_pcm_buffer) / sizeof(uint8_t); i++) {
-        printf("	%d\n", p_pcm_buffer[i]);
+    memcpy(&sample_data_segment[segment_index_offset], p_pcm_buffer, sizeof(p_pcm_buffer));
+    segment_index_offset += sizeof(p_pcm_buffer);
+    printf("%d\n", segment_index_offset);
+    if (segment_index_offset >= sampling_frequency * sizeof(uint8_t)) {
+        segment_index_offset = 0;
+        // TODO FFT
+        sample_data_segment = (uint8_t *) malloc(sizeof(uint8_t) * sampling_frequency);
+        printf("=============================================================================\n");
+        for (int i = 0; i < sampling_frequency; i++) {
+            printf("%d\n", sample_data_segment[i]);
+        }
     }
-
     // unlock the mutex before we finish
     pthread_mutex_unlock(sp->mLock);
 }
@@ -143,4 +170,8 @@ static void flushBuffer(vlc_context *ctx) {
            + ctx->mChannels * (ctx->mChunkSize - ctx->mFramesOverlap),
            ctx->mChannels * ctx->mFramesOverlap * sizeof(int16_t));
     ctx->mBufferSize = ctx->mFramesOverlap;
+}
+
+int *fft_segment(uint8_t *pcm_buffer) {
+
 }
