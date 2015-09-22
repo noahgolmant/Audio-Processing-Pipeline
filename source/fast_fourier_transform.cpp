@@ -27,6 +27,8 @@ static inline double hamming_window(int current_sample, int num_samples) {
     return HAMMING_WINDOW_ALPHA - HAMMING_WINDOW_BETA * cos((2 * M_PI * current_sample) / (num_samples - 1));
 }
 
+
+
 /* Processes the audio segment into discrete frequency bins with an FFT */
 static void *fft_segment(void *audio_segment_buffer_orig) {
     // create a new copy of the buffer so we don't access the space being used by VLC
@@ -63,13 +65,15 @@ static void *fft_segment(void *audio_segment_buffer_orig) {
 
     double frequency_magnitude_dB[NUM_SAMPLES_PER_FFT];
 
+    FILE* fft_out_file = fopen("fft_out.dat", "a");
     // test output of frequency data
     for (int i = 0; i < NUM_SAMPLES_PER_FFT; i++) {
         // calculate the magnitude of the sample, then convert it to a logarithmic scale
         // to represent as a decibel
         frequency_magnitude_dB[i] = 20 * log10(sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]));
-        printf("FREQUENCY: %3d\tdB: %9.5f\n", i * (SAMPLING_FREQUENCY / NUM_SAMPLES_PER_FFT),
-               frequency_magnitude_dB[i]);
+        fprintf(fft_out_file, "%3d,%f ", i * (SAMPLING_FREQUENCY / NUM_SAMPLES_PER_FFT), frequency_magnitude_dB[i]);
     }
+    fprintf(fft_out_file, "\n");
+    fclose(fft_out_file);
 
 }

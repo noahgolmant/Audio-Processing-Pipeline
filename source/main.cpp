@@ -37,6 +37,7 @@ frequency_band getQuantizedFrequencyBand(int frequency) {
         return OUT_OF_RANGE;
 }
 
+FILE* fft_out_file;
 
 int main(int argc, char **argv) {
     if (argc < 2)

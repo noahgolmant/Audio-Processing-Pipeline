@@ -7,6 +7,6 @@ include_directories(headers/)
 
 set(SOURCE_FILES source/main.cpp source/audio_decoding.cpp source/fast_fourier_transform.cpp)
 set(HEADER_FILES headers/audio_decoding.h)
-add_executable(Music_Processing ${HEADER_FILES} ${SOURCE_FILES})
+add_executable(Music_Processing ${HEADER_FILES} ${SOURCE_FILES} source/pipelining.cpp)
 
 target_link_libraries(Music_Processing vlc fftw3 pthread)
